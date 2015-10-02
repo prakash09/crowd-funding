@@ -1,0 +1,14 @@
+{% extends 'blog/base.html' %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block blog-main %}
+
+    <article class="blog-post">
+        <header>
+            <h1>{{ post.title }}</h1>
+            <p class="blog-post-meta"><strong>Writer:</strong>{{ post.author_name }} | {{ post.date }}</p>
+        </header>
+               <section>
+            {{ post.body|safe }}
+        </section>
+    </article>
+{% endblock %}

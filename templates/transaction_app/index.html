@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block blog-main %}
+    {% for post in posts.object_list %}
+    <div class="container-fluid">
+
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="frame-square">
+                    <div class="crop">
+                        <img  src={{post.featured_image}} width="290px" height="290px" alt="Image not found"></img>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-lg-7">
+
+                <article class="blog-post">
+                    <header>
+                        <h2><a href="{% url 'article' post.slug %}">{{ post.title }}</a></h2>
+                    </header>
+                    <p class="blog-post-meta"><strong>Seeker:</strong>{{ post.author_name.user.username }} | {{ post.date }}</p>
+                    <section>
+                       <p> <strong>Amount requested:</strong>{{post.amount_requested}}</p>
+                        <p><strong>Amount received:</strong>{{post.amount_received}}</p>
+                        <p><strong>tenure: </strong>{{post.tenure}}</p>
+                        {{ post.body|striptags|truncatewords:30|safe }}
+                         </section>
+                </article>
+                <form role="form" method="POST" action="{% url 'investment' post.slug %}" >
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="amount">Enter amount</label>
+                        <input type="text" name="amount" class="form-control" id="amount">
+                    </div>
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </form>
+                <br>
+                <div id="browse_app">
+                    <a class="btn btn-large btn-info" href="{% url 'article' post.slug %}">Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </br>
+    </br>
+    {% endfor %}
+    {% if posts.object_list and posts.paginator.num_pages > 1 %}
+        <footer>
+            <ul class="pager">
+                {% if posts.has_previous %}
+                    <li><a class="previous" href="{% url 'page' active_category posts.previous_page_number %}">Previous</a></li>
+                {% endif %}
+                <span>
+                    <li>　{{ posts.number }} ／ {{ posts.paginator.num_pages }}　</li>
+                </span>
+                {% if posts.has_next %}
+                    <li><a class="next" href="{% url 'page' active_category posts.next_page_number %}">Next</a></li>
+                {% endif %}
+            </ul>
+        </footer>
+    {% endif %}
+{% endblock %}

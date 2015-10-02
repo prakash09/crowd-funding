@@ -1,0 +1,10 @@
+{% extends 'blog/base.html' %}
+{% block blog-main %}
+    <title>Zimply</title>
+<strong>{{ date }}</strong> 
+<ul class="list-unstyled">
+    {% for post in posts %}
+        <li><a href="{% url 'article' post.slug %}">{{ post.title }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

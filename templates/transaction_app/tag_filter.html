@@ -1,0 +1,10 @@
+{% extends 'blog/base.html' %}
+
+{% block blog-main %}
+    <p><strong>{{ tag }}</strong></p>
+    <ul class="list-unstyled">
+        {% for slug, title in articles %}
+            <li><a href="{% url 'article' slug %}">{{ title }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}
