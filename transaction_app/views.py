@@ -16,84 +16,40 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 from django.core.urlresolvers import reverse
-"""""""""""""""""""""""""""
-view functions
-"""""""""""""""""""""""""""
+from auth_app.models import Person, MmInvestment
+from django.db.models.fields.related import ManyToManyField
+
+def to_dict(instance):
+    opts = instance._meta
+    data = {}
+    for f in opts.concrete_fields + opts.many_to_many:
+        if isinstance(f, ManyToManyField):
+            if instance.pk is None:
+                data[f.name] = []
+            else:
+                data[f.name] = list(f.value_from_object(instance).values_list('pk', flat=True))
+        else:
+            data[f.name] = f.value_from_object(instance)
+    return data
 
 #@login_required(login_url = 'sign_in' )
+def dashboard(request):
+    person=Person.objects.filter(user__id=request.user.id)[0]
+    invested=person.money_invested.through.objects.all()
+    data=[]
+    for i in invested:
+        json_data=to_dict(i)
+        data.append(json_data)
+    return render(request, 'dashboard.html',{'data':data,'person':person})
+
 def home(request, cat_name,page_num=1):
-    """
-    Home page
-    """
     if cat_name.lower() == 'home':
         posts = Post.objects.all().order_by('id').reverse()
     else:
         posts = Post.objects.all().filter(category__name=cat_name).order_by('id').reverse()
-    mark_down(posts)
-    posts = paginate(posts, page_num)
-    return render(request, 'transaction_app/index.html',
-                  fill_page_with(posts=posts, nav_name='blog', active_category=cat_name))
+    category=Category.objects.all()
+    return render(request, 'listing.html',{'posts':posts, 'category':category})
 
-@login_required(login_url = 'sign_in' )
-def article(request, article_id):
-    """
-    article details page
-    """
-    posts = Post.objects.filter(slug=article_id)
-    if posts.count() == 0:
-        return render(request, 'blog/blog/article.html')
-
-    post = posts[0]
-    post.body = markdown(post.body)
-
-    return render(request, 'blog/blog/article.html',
-                  fill_page_with(post=post, active_category=post.category.name, nav_name='blog'))
-
-def fill_page_with(**kwargs):
-    base_dict = \
-        {
-            'categories': article_count_per_category(),
-        }
-    base_dict.update(kwargs)
-    return base_dict
-
-
-def mark_down(posts):
-    for post in posts:
-        post.body = markdown(post.body)
-
-
-def paginate(posts, page_num=1):
-    paginator = Paginator(posts, 5)
-    try:
-        page = int(page_num)
-    except ValueError:
-        page = 1
-
-    try:
-        posts = paginator.page(page)
-    except (InvalidPage, EmptyPage):
-        posts = paginator.page(paginator.num_pages)
-
-    return posts
-
-def get_categories():
-    categories = Category.objects.values('name', 'description')
-    return categories
-
-
-def article_count_per_category():
-    return Counter(post.category for post in Post.objects.all()).iteritems()
-
-
-def about(request):
-    return render(request, 'blog/blog/about.html',
-                  fill_page_with(nav_name='about'))
-
-
-def contact(request):
-    return render(request, 'blog/blog/contact.html',
-                  fill_page_with(nav_name='contact'))
 
 
 def blog_search(request):
@@ -105,17 +61,13 @@ def blog_search(request):
     tagval = str(tagval).split(" ")
     entry_query = get_query(keyword.strip(), ['category__name','title','body'])
     posts = Post.objects.filter(entry_query).distinct().order_by('id').reverse()
-    mark_down(posts)
-    posts = paginate(posts, page_num)
-    return render(request, 'blog/blog/index.html',
-                  fill_page_with(posts=posts, nav_name='blog',active_category=cat_name)) 
+    return render(request, 'blog/blog/index.html') 
 
 @csrf_exempt
 def investments(request,slug):
     amount=int(request.POST['amount'])
     if request.user.is_authenticated():
         user=User.objects.filter(email=request.user.email)[0]
-        import pdb; pdb.set_trace()
         author=user.authors
         if int(author.credits_available) >= int(amount):
             author.credits_spent=author.credits_spent+amount  #two users one with slug and other with email
@@ -128,4 +80,3 @@ def investments(request,slug):
         else:
             return HttpResponse("You have less amount than required")
     return HttpResponse("done")
-

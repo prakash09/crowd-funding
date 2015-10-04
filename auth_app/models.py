@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import datetime
 
 PROFILE_CATEGORY = (
         (1, 'A'),
@@ -7,6 +8,8 @@ PROFILE_CATEGORY = (
         (3, 'C'),
         (4, 'D'),
     )
+
+
 
 class Person(models.Model):
     user = models.OneToOneField(User,related_name="persons")
@@ -21,7 +24,7 @@ class Person(models.Model):
     credits_spent=models.IntegerField(default=0)
     total_posts=models.IntegerField(default=0)
     total_successful_posts=models.IntegerField(default=0)
-    money_invested=models.ManyToManyField('self', related_name='investors', symmetrical=False, null=True, blank=True)
+    money_invested=models.ManyToManyField('self',through="MmInvestment", symmetrical=False, null=True, blank=True)
     def __unicode__(self):
         return self.user.username
     def credit_rating(self):
@@ -35,3 +38,10 @@ class Person(models.Model):
                 return (self.salary/100000)*5+(self.total_successful_posts/self.total_posts)*5
             except:
                 return 0
+
+class MmInvestment(models.Model):
+    investor=models.ForeignKey(Person,related_name="investor")
+    seeker=models.ForeignKey(Person, related_name="seeker")
+    amount=models.FloatField(default=0.0)
+    credit_rating=models.IntegerField(default=0)
+    date=models.DateTimeField(auto_now_add=True)

@@ -37,7 +37,6 @@ def sign_up(request):
         request.session['error_msg'] = None
     	return redirect('landing_page')
     elif request.method == 'POST': 
-        import pdb; pdb.set_trace()
         try:
             user = User.objects.create_user(username=data['email'],first_name=data['name'], email = data['email'])
             user.save()
@@ -45,7 +44,7 @@ def sign_up(request):
             user.save()
             profile = Person(user = user,phone=data['phone'])
             profile.save()
-            request.session['error_msg'] = None
+            request.session['error_msg'] = "Signup successful. Please login"
             return redirect('landing_page')
         except:
             request.session['error_msg'] = "Email already registered"
